@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Draggable</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Minimal draggable element as Web Component">
+    <meta name="author" content="John Lynch">
+</head>
+
+<body>
+    <template id="draggable">
+        <style>
+            :host {
+                width: 8vw;
+                height: 8vh;
+                cursor: grab;
+                border: 3px solid #000;
+                border-radius: 9px;
+                padding: 1vw;
+                user-select: none;
+                background-color: #fa5;
+                color: #000;
+                left: 40vw;
+                top: 40vh;
+                font-family: monospace;
+                font-size: 1vw;
+            }
+        </style>
+        <div>Default text</div>
+    </template>   
+
+    <main></main>
+
+    <script>
+        class Draggable extends HTMLElement {
+            constructor(template) {
+                super();
+                this.attachShadow({ mode: 'open' });
+                this.shadowRoot.appendChild(
+                    template.content.cloneNode(true)
+                );
+            }
+
+            connectedCallback() {
+                this.is_dragging = false;
+                this.offsetX = 0;
+                this.offsetY = 0;
+                this.style.display = 'block';
+                this.style.position = 'absolute';
+                this.addEventListener('mousedown', this.handle_mousedown.bind(this));
+                document.addEventListener('mousemove', this.handle_mousemove.bind(this));
+                document.addEventListener('mouseup', this.handle_mouseup.bind(this));
+            }
+
+            handle_mousedown(e) {
+                this.is_dragging = true;
+                const rect = this.getBoundingClientRect();
+                this.offsetX = e.clientX - rect.x;
+                this.offsetY = e.clientY - rect.y;
+                this.style.cursor = 'grabbing';
+            }
+
+            handle_mousemove(e) {
+                if (!this.is_dragging) return;
+                const x = e.clientX - this.offsetX;
+                const y = e.clientY - this.offsetY;
+                this.style.left = `${x}px`;
+                this.style.top = `${y}px`;
+            }
+
+            handle_mouseup() {
+                this.is_dragging = false;
+                this.style.cursor = 'grab';
+            }
+        }
+
+        class DraggableBlueDisc extends Draggable {
+            constructor(template) {
+                super(template);
+            }
+            connectedCallback() {
+                super.connectedCallback();
+                this.style.borderRadius = '50%';
+                this.style.backgroundColor  = 'Aqua';
+            }
+        }
+
+        customElements.define('drag-box', Draggable);
+        customElements.define('drag-disc', DraggableBlueDisc);
+
+        const template = document.querySelector('template#draggable');
+        const thing = new Draggable(template);
+        document.querySelector('main').appendChild(thing);
+        const other_thing = new DraggableBlueDisc(template);
+        document.querySelector('main').appendChild(other_thing);
+    </script>
+</body>
+</html>
